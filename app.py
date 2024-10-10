@@ -6,6 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import numpy as np
 from sqlalchemy.orm import relationship
+from skfuzzy import control as ctrl
 
 app = Flask(__name__)
 CORS(app)
@@ -23,7 +24,7 @@ class registration(db.Model):
 
     user_profile = relationship('UserProfile', backref='registration', uselist=False)
 
-    def __repr__(self):
+    def _repr_(self):
         return f"Registration('{self.username}', '{self.email}')"
 
 
@@ -35,7 +36,7 @@ class UserProfile(db.Model):
     parent_phone_number = db.Column(db.Integer, nullable=False)
     address = db.Column(db.String(255), nullable=False)
 
-    def __repr__(self):
+    def _repr_(self):
         return f"UserProfile('{self.child_name}', '{self.parent_name}', '{self.parent_phone_number}')"
 
 
@@ -68,24 +69,33 @@ class predicted_values(db.Model):
     predicted_values = db.Column(db.Float, nullable=False)
 
 
-def apply_fuzzy_logic_system(counting_input, color_input, simulator):
-    # Use the mean of input lists for counting and coloring abilities
+def apply_fuzzy_logic_system(counting_input, color_input, calculation_input, control_system):
+    # Create a simulation object from the fuzzy control system
+    simulator = ctrl.ControlSystemSimulation(control_system)
+
+    # Use the mean of input lists for counting, coloring, and calculation abilities
     simulator.input['Counting_Ability'] = np.mean(counting_input)
     simulator.input['Color_Ability'] = np.mean(color_input)
+    simulator.input['Calculation_Ability'] = np.mean(calculation_input)
+
+    # Compute the fuzzy logic output
     simulator.compute()
 
     return simulator.output['Percentage']
 
 
-# Load the fuzzy model from the pickle file
+# Load the fuzzy control system from the pickle file
 with open('fuzzy_model.pkl', 'rb') as file:
-    loaded_fuzzy_simulator = pickle.load(file)
+    loaded_fuzzy_ctrl = pickle.load(file)
 
 
 @app.route('/')
 def main_page():
     # return 'Hello world'
     return render_template('index.html')
+
+
+simulator = ctrl.ControlSystemSimulation(loaded_fuzzy_ctrl)
 
 
 @app.route('/predict', methods=['POST'])
@@ -95,10 +105,17 @@ def predict():
 
         counting_input = data['counting_input']
         color_input = data['color_input']
-        firebase_uid = data['uid']  # Fetching Firebase user ID from the request
+        calculation_input = data['calculation_input']
+        firebase_uid = data['uid']
+        n = 0.2
+        for i in range(len(counting_input)):
+            counting_input[i] /= n**0.5
+            color_input[i] /= n**0.33
+            calculation_input[i] /= n**0.45
+            n = n*2
 
         # Predict using the fuzzy logic system
-        prediction = apply_fuzzy_logic_system(counting_input, color_input, loaded_fuzzy_simulator)
+        prediction = apply_fuzzy_logic_system(counting_input, color_input, calculation_input, loaded_fuzzy_ctrl)
 
         # Save the predicted value to the database
         new_predicted_value = predicted_values(firebase_uid=firebase_uid, predicted_values=prediction)
@@ -279,3 +296,4 @@ def result_history(firebase_uid):
 
     except Exception as e:
         return jsonify({'error': str(e)})
+
