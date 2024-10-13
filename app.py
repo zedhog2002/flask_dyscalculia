@@ -107,12 +107,6 @@ def predict():
         color_input = data['color_input']
         calculation_input = data['calculation_input']
         firebase_uid = data['uid']
-        n = 0.2
-        for i in range(len(counting_input)):
-            counting_input[i] /= n**0.5
-            color_input[i] /= n**0.33
-            calculation_input[i] /= n**0.45
-            n = n*2
 
         # Predict using the fuzzy logic system
         prediction = apply_fuzzy_logic_system(counting_input, color_input, calculation_input, loaded_fuzzy_ctrl)
@@ -296,4 +290,5 @@ def result_history(firebase_uid):
 
     except Exception as e:
         return jsonify({'error': str(e)})
+
 
