@@ -105,7 +105,7 @@ def predict():
 @app.route('/prediction_table/<string:firebase_uid>', methods=['GET'])
 def get_prediction_table(firebase_uid):
     try:
-        predictions = predicted_Values.query.filter_by(firebase_uid=firebase_uid).all()
+        predictions = predicted_values.query.filter_by(firebase_uid=firebase_uid).all()
         if predictions:
             prediction_data = [{'id': pred.id, 'firebase_uid': pred.firebase_uid, 'predicted_values': pred.predicted_values} for pred in predictions]
             return jsonify({'predictions': prediction_data})
