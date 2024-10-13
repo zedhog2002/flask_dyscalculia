@@ -93,7 +93,7 @@ def predict():
 
         prediction = apply_fuzzy_logic_system(counting_input, color_input, calculation_input, loaded_fuzzy_ctrl)
 
-        new_predicted_value = predicted_alues(firebase_uid=firebase_uid, predicted_values=prediction)
+        new_predicted_value = predicted_values(firebase_uid=firebase_uid, predicted_values=prediction)
         db.session.add(new_predicted_value)
         db.session.commit()
 
@@ -105,7 +105,7 @@ def predict():
 @app.route('/prediction_table/<string:firebase_uid>', methods=['GET'])
 def get_prediction_table(firebase_uid):
     try:
-        predictions = PredictedValues.query.filter_by(firebase_uid=firebase_uid).all()
+        predictions = predicted_Values.query.filter_by(firebase_uid=firebase_uid).all()
         if predictions:
             prediction_data = [{'id': pred.id, 'firebase_uid': pred.firebase_uid, 'predicted_values': pred.predicted_values} for pred in predictions]
             return jsonify({'predictions': prediction_data})
