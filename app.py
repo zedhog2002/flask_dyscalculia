@@ -93,7 +93,7 @@ def predict():
 
         prediction = apply_fuzzy_logic_system(counting_input, color_input, calculation_input, loaded_fuzzy_ctrl)
 
-        new_predicted_value = PredictedValues(firebase_uid=firebase_uid, predicted_values=prediction)
+        new_predicted_value = predicted_alues(firebase_uid=firebase_uid, predicted_values=prediction)
         db.session.add(new_predicted_value)
         db.session.commit()
 
@@ -153,7 +153,7 @@ def save_user_details():
 def register_user():
     try:
         data = request.get_json()
-        new_registration = Registration(**data)
+        new_registration = registration(**data)
         db.session.add(new_registration)
         db.session.commit()
         return jsonify({'message': 'Registration successful'})
